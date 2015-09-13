@@ -223,6 +223,76 @@ void main_task(intptr_t unused)
         // 前進命令
         forward = 30;
 
+        // 区間切り分け ( 前進命令をコメントして使う、LコースRコースでそれぞれ使用しない方はコメント )
+        // 直線 : 緑、カーブ : 赤、難所 : 橙
+
+        // R
+
+        // S1
+        if ( motor_ang_r < 100 ) {
+            forward = 100;
+            ev3_led_set_color(LED_GREEN);
+        }
+        // C1
+        else if ( motor_ang_r < 200 ) {
+            forward = 30;
+            ev3_led_set_color(LED_RED);
+        }
+        // S2
+        else if ( motor_ang_r < 300 ) {
+            forward = 100;
+            ev3_led_set_color(LED_GREEN);
+        }
+        // C2 C3
+        else if ( motor_ang_r < 300 ) {
+            forward = 30;
+            ev3_led_set_color(LED_RED);
+        }
+        // S3
+        else if ( motor_ang_r < 300 ) {
+            forward = 100;
+            ev3_led_set_color(LED_GREEN);
+        }
+        // 難所周辺
+        else {
+            forward = 30;
+            ev3_led_set_color(LED_ORANGE);
+        }
+
+        // L
+
+        // S1
+        if ( motor_ang_r < 100 ) {
+            forward = 100;
+            ev3_led_set_color(LED_GREEN);
+        }
+        // C1
+        else if ( motor_ang_r < 200 ) {
+            forward = 30;
+            ev3_led_set_color(LED_RED);
+        }
+        // S2
+        else if ( motor_ang_r < 300 ) {
+            forward = 100;
+            ev3_led_set_color(LED_GREEN);
+        }
+        // C2 C3
+        else if ( motor_ang_r < 300 ) {
+            forward = 30;
+            ev3_led_set_color(LED_RED);
+        }
+        // S3
+        else if ( motor_ang_r < 300 ) {
+            forward = 100;
+            ev3_led_set_color(LED_GREEN);
+        }
+        // 難所周辺
+        else {
+            forward = 30;
+            ev3_led_set_color(LED_ORANGE);
+        }
+
+
         //ev3_speaker_play_tone(300, 10);
 
         // PID制御
