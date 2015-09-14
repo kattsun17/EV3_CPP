@@ -41,7 +41,7 @@ static FILE     *bt = NULL;       // Bluetoothファイルハンドル
 // 下記のマクロは個体/環境に合わせて変更する必要があります
 #define GYRO_OFFSET           0   // ジャイロセンサオフセット値(角速度0[deg/sec]時)
 #define SONAR_ALERT_DISTANCE  5   // 超音波センサによる障害物検知距離[cm]
-#define TAIL_ANGLE_STAND_UP  94   // 完全停止時の角度[度]
+#define TAIL_ANGLE_STAND_UP  103   // 完全停止時の角度[度]
 #define TAIL_ANGLE_DRIVE      0   // バランス走行時の角度[度]
 #define P_GAIN             2.5F   // 完全停止用モータ制御比例定数
 #define PWM_ABS_MAX          60   // 完全停止用モータ制御PWM絶対最大値
@@ -51,14 +51,19 @@ static FILE     *bt = NULL;       // Bluetoothファイルハンドル
 
 // 輝度PID制御のパラメタ(旋回制御)
 #define DELTA_T 0.004  // 走行制御の動作周期
-#define KP 1           // Pパラメタ
-#define KI 1           // Iパラメタ
-#define KD 1           // Dパラメタ
+// 本文中に kp ki kdで
+/*
+#define KP 0.36          // Pパラメタ
+#define KI 1.2           // Iパラメタ
+#define KD 0.027           // Dパラメタ
+*/
+
+
 
 // LCDフォントサイズ
 #define CALIB_FONT (EV3_FONT_SMALL)
-#define CALIB_FONT_WIDTH (6/*TODO: magic number*/)
-#define CALIB_FONT_HEIGHT (8/*TODO: magic number*/)
+#define CALIB_FONT_WIDTH (6)
+#define CALIB_FONT_HEIGHT (8)
 
 // 関数プロトタイプ宣言
 static int32_t sonar_alert(void); // ソナーセンサで障害物を検知する
@@ -79,6 +84,10 @@ static void calib_strategy(void); // キャリブレーションを行う
 // pid制御関連の大域宣言
 static int32_t diff[2];    // 目標値と測定値の差分の累積値
 static int32_t integral;
+
+static float kp = 0.36F;
+static float ki = 1.2F;
+static float kd = 0.027F;
 
 // 光センサから得た値
 static int32_t light_black;
@@ -106,6 +115,9 @@ void main_task(intptr_t unused)
     int32_t figure_count = 0;
     //int8_t flag_garage = 0;  // ガレージ用関数のフラグ
     int8_t p, i, d;
+    // pidゲイン値
+    //int32_t kp, kii, kd;
+    int32_t tail_reset = 0;
 
     // 各オブジェクトを生成・初期化する
     touchSensor = new TouchSensor(PORT_1);
@@ -130,8 +142,21 @@ void main_task(intptr_t unused)
     // キャリブレーション
     calib_strategy();
 
+    // 尻尾モータの遊びをなくすため、巻き込む
+    while  (1) {
+        ev3_motor_set_power(EV3_PORT_A, -10);
+        clock->sleep(4);
+        ev3_speaker_play_tone(700, 60);
+        tail_reset++;
+        if ( tail_reset > 300) { break; }
+    }
+
+
+
     // 尻尾モータのリセット
     tailMotor->reset();
+
+
 
     // Open Bluetooth file
     bt = ev3_serial_open_file(EV3_SERIAL_BT);
@@ -221,7 +246,11 @@ void main_task(intptr_t unused)
         }
 
         // 前進命令
-        forward = 30;
+        // forward = 100;
+
+
+
+
 
         // 区間切り分け ( 前進命令をコメントして使う、LコースRコースでそれぞれ使用しない方はコメント )
         // 直線 : 緑、カーブ : 赤、難所 : 橙
@@ -229,27 +258,34 @@ void main_task(intptr_t unused)
         // R
 
         // S1
-        if ( motor_ang_r < 100 ) {
+        if ( motor_ang_r < 5000 ) {
             forward = 100;
+            kp = 0.36;
+            ki = 1.2;
+            kd = 0.027;
             ev3_led_set_color(LED_GREEN);
         }
         // C1
-        else if ( motor_ang_r < 200 ) {
-            forward = 30;
+        else if ( motor_ang_r < 7000 ) {
+            forward = 100;
+            kp = 0.91;
+            ki = 0.3;
+            kd = 0.075;
             ev3_led_set_color(LED_RED);
         }
+
         // S2
-        else if ( motor_ang_r < 300 ) {
+        else if ( motor_ang_r < 30000 ) {
             forward = 100;
             ev3_led_set_color(LED_GREEN);
         }
         // C2 C3
-        else if ( motor_ang_r < 300 ) {
+        else if ( motor_ang_r < 30000 ) {
             forward = 30;
             ev3_led_set_color(LED_RED);
         }
         // S3
-        else if ( motor_ang_r < 300 ) {
+        else if ( motor_ang_r < 30000 ) {
             forward = 100;
             ev3_led_set_color(LED_GREEN);
         }
@@ -258,6 +294,8 @@ void main_task(intptr_t unused)
             forward = 30;
             ev3_led_set_color(LED_ORANGE);
         }
+
+        /*
 
         // L
 
@@ -291,6 +329,7 @@ void main_task(intptr_t unused)
             forward = 30;
             ev3_led_set_color(LED_ORANGE);
         }
+        */
 
 
         //ev3_speaker_play_tone(300, 10);
@@ -300,11 +339,11 @@ void main_task(intptr_t unused)
         diff[1] = (colorSensor->getBrightness()) - ((light_white + light_black)/2);
         integral += ( diff[1] + diff[0] ) / 2.0 * DELTA_T;
         // 比例
-        p = KP * diff[1];
+        p = kp * diff[1];
         // 微分
-        i = KI * integral;
+        i = ki * integral;
         // 積分
-        d = KD * (diff[1] - diff[0]) / DELTA_T;
+        d = kd * (diff[1] - diff[0]) / DELTA_T;
         turn = p + i + d;
         if ( p + i + d > 100.0 ) turn = 100.0;
         if ( p + i + d < -100.0 ) turn = -100.0;
@@ -1145,11 +1184,11 @@ static void limited_line_trace(int8_t forward, int16_t time)
         diff[1] = (colorSensor->getBrightness()) - ((light_white + light_black)/2);
         integral += ( diff[1] + diff[0] ) / 2.0 * DELTA_T;
         // 比例
-        p = KP * diff[1];
+        p = kp * diff[1];
         // 微分
-        i = KI * integral;
+        i = ki * integral;
         // 積分
-        d = KD * (diff[1] - diff[0]) / DELTA_T;
+        d = kd * (diff[1] - diff[0]) / DELTA_T;
 
         turn = p + i + d;
         if ( p + i + d > 100.0 ) turn = 100.0;
