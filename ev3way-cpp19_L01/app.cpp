@@ -40,7 +40,7 @@ static FILE     *bt = NULL;       // Bluetoothファイルハンドル
 
 // 下記のマクロは個体/環境に合わせて変更する必要があります
 #define GYRO_OFFSET           0   // ジャイロセンサオフセット値(角速度0[deg/sec]時)
-#define SONAR_ALERT_DISTANCE  13   // 超音波センサによる障害物検知距離[cm]
+#define SONAR_ALERT_DISTANCE  5   // 超音波センサによる障害物検知距離[cm]
 #define TAIL_ANGLE_STAND_UP  100   // 完全停止時の角度[度]
 #define TAIL_ANGLE_DRIVE      0   // バランス走行時の角度[度]
 #define P_GAIN             2.5F   // 完全停止用モータ制御比例定数
@@ -88,7 +88,7 @@ static void figure_strategy(void); // フィギュアLを膠着する
 static void figure_strategy2(void); // フィギュアLを攻略する(現在こちらを採用)
 static void limited_line_trace(int8_t forward, int16_t time); // 指定した時間ラインtのレースする
 static void straight_limited_line_trace(int8_t forward, int16_t time); // 指定した時間turn値0でライントレースする
-static void tail_limited_line_trace(int8_t forward, int16_t c_angle, int16_t angle, int16_t num); // 指定した時間turn値0でライントレースする。このとき尻尾のモータをd
+static void tailfree_straight_limited_line_trace(int8_t forward, int16_t time); // 指定した時間turn値0でライントレースする。このとき尻尾のモータを自由にしていできる
 static void moving_style_change(int32_t current_angle, int32_t angle, int32_t time, int32_t motor); // タイヤを動かしながら尻尾モータを動かす
 static void calib_strategy(void); // キャリブレーションを行う
 static void stop_style_change(int16_t angle, int16_t time); // 走行状態から倒立状態へ移行
@@ -526,9 +526,6 @@ void lookup_strategy(void)
 
     //int32_t oldang_l, oldang_r;
 
-    // しっぽを出してわずかに後退
-    tail_limited_line_trace(-5, TAIL_ANGLE_DRIVE, 90, 1000);
-
     // 4msec周期50回の間に、走行体の角度を79度に変更
 
     /*
@@ -617,7 +614,7 @@ void lookup_strategy(void)
                     // for ( k = 0; k < ddeff; k++ ) {   ev3_speaker_play_tone(100, 200); clock->sleep(4); }
                     ev3_speaker_play_tone(100, 200);
                     lpower = 10;
-                    rpower = 25;
+                    rpower = 20;
 
                     //ev3_motor_rotate(EV3_PORT_C, ddeff, 10, true);
                 } else if ( (ev3_motor_get_counts(EV3_PORT_B) - motor_ang_l) - (ev3_motor_get_counts(EV3_PORT_C) - motor_ang_r) < 0 ) {
@@ -626,10 +623,10 @@ void lookup_strategy(void)
                     //ev3_motor_rotate(EV3_PORT_B, ddeff, 10, true);
                      ev3_speaker_play_tone(600, 200);
                     lpower = 20;
-                    rpower = 20;
+                    rpower = 10;
                 } else {
                     lpower = 10;
-                    rpower = 20;
+                    rpower = 10;
                 }
 
                 motor_ang_l = ev3_motor_get_counts(EV3_PORT_B);
@@ -671,7 +668,7 @@ void lookup_strategy(void)
     style_change(85, 400);
     */
 
-    moving_style_change(65, 85, 1000, -5);
+    moving_style_change(65, 90, 1000, -5);
 
     i = 0;
     while(1) {
@@ -680,9 +677,7 @@ void lookup_strategy(void)
         ev3_led_set_color(LED_RED);
         clock->sleep(4);
     }
-    ev3_led_set_color(LED_GREEN);
-
-    garage_stop();
+    ev3_led_set_color(LED_OFF);
 
     /*
     while (1) {
@@ -756,19 +751,17 @@ static void garage_stop(void)
     // int8_t turn;
     // int8_t pwm_L, pwm_R;
 
-    int32_t i;       // 反復変数
-    int32_t j = 0;   // 反復変数
+    int8_t i;       // 反復変数
+    int8_t j = 0;   // 反復変数
 
     // 方向転換
-    /*
     for ( i = 0; i < 90; i++ ) {
         ev3_motor_set_power(EV3_PORT_B, 10);
         ev3_motor_set_power(EV3_PORT_C, 5);
         ev3_speaker_play_tone(300, 20);
-        tail_control(85);
+        tail_control(80);
         clock->sleep(4);
     }
-    */
 
     while(1)
     {
@@ -780,24 +773,24 @@ static void garage_stop(void)
         // if (ev3_button_is_pressed(BACK_BUTTON)) break;
         // if (touchSensor->isPressed()) { break; }
 
-        tail_control(85); // しっぽ
+        tail_control(80); // しっぽ
 
         if (colorSensor->getBrightness() >= ((light_white + light_black)/2)-10)
         {
-            ev3_motor_set_power(EV3_PORT_B, 7);
+            ev3_motor_set_power(EV3_PORT_B, 5);
             ev3_motor_set_power(EV3_PORT_C, 10);
         }
         else
         {
             ev3_motor_set_power(EV3_PORT_B, 10);
-            ev3_motor_set_power(EV3_PORT_C, 0);
+            ev3_motor_set_power(EV3_PORT_C, 5);
         }
 
-        if ( j > 900 && j % 500 == 0 ) {
-            for ( i = 0; i < 1000; i++ ) {
+        if ( j % 1500 == 0 ) {
+            for ( i = 0; i < 90; i++ ) {
                 ev3_motor_set_power(EV3_PORT_B, 0);
                 ev3_motor_set_power(EV3_PORT_C, 0);
-                tail_control(85);
+                tail_control(75);
                 ev3_led_set_color(LED_RED );
 
                 clock->sleep(4);
@@ -1341,44 +1334,31 @@ static void straight_limited_line_trace(int8_t forward, int16_t time)
 }
 
 //*****************************************************************************
-// 関数名 : tail_imited_line_trace
+// 関数名 : tailfree_straight_limited_line_trace
 // 引数 :
 // 返り値 :
 // 概要 :
 //*****************************************************************************
 
-static void tail_limited_line_trace(int8_t forward, int16_t c_angle, int16_t angle, int16_t num)
+static void tailfree_straight_limited_line_trace(int8_t forward, int16_t time)
 {
     int8_t turn;         // 旋回命令
     int8_t pwm_L, pwm_R; // 左右モータPWM出力
-    int8_t p, i, d;      // PiD 変数
-    int16_t count;       // 反復変数
-    int16_t tmp;         // 一時変数、現在周期の目標角度
+    // int8_t p, i, d;      // PiD 変数
 
-    for(count = 0; count < num; count++)
+    int16_t count; // 反復変数
+
+    for(count = 0; count < time; count++)
     {
         int32_t motor_ang_l, motor_ang_r;
         int32_t gyro, volt;
 
         if (ev3_button_is_pressed(BACK_BUTTON)) break;
 
-        tmp = c_angle + ((angle - c_angle) * count / num);
-        tail_control(tmp);
+        // tail_control(TAIL_ANGLE_DRIVE);
 
-        // PiD control
-        diff[0] = diff[1];
-        diff[1] = (colorSensor->getBrightness()) - ((light_white + light_black)/2);
-        integral += ( diff[1] + diff[0] ) / 2.0 * DELTA_T;
-        // 比例
-        p = kp * diff[1];
-        // 微分
-        i = ki * integral;
-        // 積分
-        d = kd * (diff[1] - diff[0]) / DELTA_T;
-
-        turn = p + i + d;
-        if ( p + i + d > 100.0 ) turn = 100.0;
-        if ( p + i + d < -100.0 ) turn = -100.0;
+        forward = 30; // 前進命令
+        turn = 0;
 
         // 倒立振子制御APIに渡すパラメータを取得する
         motor_ang_l = leftMotor->getCount();
