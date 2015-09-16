@@ -1,4 +1,4 @@
-/**
+﻿/**
  ******************************************************************************
  ** ファイル名 : app.cpp
  **
@@ -66,11 +66,11 @@ static FILE     *bt = NULL;       // Bluetoothファイルハンドル
 #define CALIB_FONT_HEIGHT (8)
 
 // 区間の境界の位置
-#define S1 5102
-#define C1 1768
-#define S2 825
-#define C2C3 2403
-#define S3 934
+#define S1 5913
+#define C1 1811
+#define S2 937
+#define C2C3 2486
+#define S3 912
 
 // 関数プロトタイプ宣言
 static int32_t sonar_alert(void); // ソナーセンサで障害物を検知する
@@ -81,7 +81,7 @@ static void garage_stop(void); // 駐車時の動作(現状ルックアップゲ
 static void figure_strategy(void); // フィギュアLを膠着する
 static void figure_strategy2(void); // フィギュアLを攻略する(現在こちらを採用)
 static void limited_line_trace(int8_t forward, int16_t time); // 指定した時間ラインtのレースする
-static void balance_run(int8_t forward, int8_t turn, int16_t num); // 指定したエンコーダ値ぶんだけturn値0でバランス走行する
+static void straight_limited_line_trace(int8_t forward, int16_t time); // 指定した時間turn値0でライントレースする
 static void tail_limited_line_trace(int8_t forward, int16_t c_angle, int16_t angle, int16_t num); // 指定した時間turn値0でライントレースする。このとき尻尾のモータをd
 static void moving_style_change(int32_t current_angle, int32_t angle, int32_t time, int32_t motor); // タイヤを動かしながら尻尾モータを動かす
 static void calib_strategy(void); // キャリブレーションを行う
@@ -119,7 +119,7 @@ void main_task(intptr_t unused)
     int8_t turn;         // 旋回命令
     int8_t pwm_L, pwm_R; // 左右モータPWM出力
     int8_t flag_lookup = 0;  // ルックアップゲート用関数のフラグ
-    int8_t flag_figure = 2;  // フィギュアL用関数のフラグ
+    int8_t flag_figure = 0;  // フィギュアL用関数のフラグ
     int32_t figure_count = 0;
     //int8_t flag_garage = 0;  // ガレージ用関数のフラグ
     int8_t p, i, d;
@@ -228,6 +228,7 @@ void main_task(intptr_t unused)
         // バランス走行用角度に制御
         tail_control(TAIL_ANGLE_DRIVE);
 
+        /*
         // フィギュアL検知による攻略動作
         // フィギュアLフラグが0のとき
         if ( flag_figure == 0 ) {
@@ -239,8 +240,9 @@ void main_task(intptr_t unused)
                 //ev3_speaker_play_tone(600, 50);
             }
         }
+        */
 
-        /*
+
         // ルックアップゲート検知による攻略動作
         // ルックアップフラグが0のとき、かつソナーセンサが反応したとき
         if (sonar_alert() == 1 && flag_lookup == 0)
@@ -253,7 +255,6 @@ void main_task(intptr_t unused)
             flag_lookup = 2;
             lookup_strategy();
         }
-        */
 
         // 前進命令
         // forward = 100;
@@ -265,18 +266,16 @@ void main_task(intptr_t unused)
         // 区間切り分け ( 前進命令をコメントして使う、LコースRコースでそれぞれ使用しない方はコメント )
         // 直線 : 緑、カーブ : 赤、難所 : 橙
 
-        /*
         forward = 30;
         kp = 0.91;
         ki = 0.3;
         kd = 0.075;
-        flag_figure = 0;
         ev3_led_set_color(LED_ORANGE);
-        */
 
+        /*
         // S1
         if ( motor_ang_r < S1 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -294,7 +293,7 @@ void main_task(intptr_t unused)
 
         // S2
         else if ( motor_ang_r < S1+C1+S2 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -308,16 +307,14 @@ void main_task(intptr_t unused)
             ki = 0.1;
             kd = 0.075;
             ev3_led_set_color(LED_RED);
-            flag_figure = 0;
         }
         // S3
         else if ( motor_ang_r < S1+C1+S2+C2C3+S3 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
             ev3_led_set_color(LED_GREEN);
-            flag_figure = 0;
         }
         // 難所周辺
         else {
@@ -326,8 +323,8 @@ void main_task(intptr_t unused)
             ki = 0.1;
             kd = 0.075;
             ev3_led_set_color(LED_ORANGE);
-            flag_figure = 0;
         }
+        */
 
         // PID制御
         diff[0] = diff[1];
@@ -1051,39 +1048,15 @@ static void figure_strategy2(void)
     // 回転角の一時保管用係数
     int32_t motor_angle;
 
-    ev3_speaker_play_tone(300, 20);
-    balance_run(30, 0, 700);
+    // straight_limited_line_trace(0, 500);
 
-    ev3_speaker_play_tone(300, 20);
-    balance_run(10, 0, 500);
-
-    ev3_speaker_play_tone(300, 20);
-    balance_run(10, -2, 70);
-
-    ev3_speaker_play_tone(300, 20);
-    tail_limited_line_trace(5, TAIL_ANGLE_DRIVE, 90, 1000);
-
-    ev3_speaker_play_tone(300, 20);
-    garage_stop();
-
-    /*
-    ev3_speaker_play_tone(300, 20);
-    stop_style_change(90, 50);
-
-    ev3_speaker_play_tone(300, 20);
-    moving_style_change(90, 65, 1000, 0);
-
-    ev3_speaker_play_tone(300, 20);
-    */
-
-    /*
     // のぼらせる
 
     motor_angle = leftMotor->getCount();
 
     while (1) {
 
-        if ( leftMotor->getCount() - motor_angle > 1500 ) { break; }
+        if ( leftMotor->getCount() - motor_angle > 500 ) { break; }
 
         int32_t motor_ang_l, motor_ang_r;
         int32_t gyro, volt;
@@ -1121,54 +1094,9 @@ static void figure_strategy2(void)
         // 4msec周期起動
         clock->sleep(4);
     }
-    */
-
-    /*
-    i = 0;
-    while (1) {
-        if ( i++ > 300 ) { break; }
-
-        int32_t motor_ang_l, motor_ang_r;
-        int32_t gyro, volt;
-
-        if (ev3_button_is_pressed(BACK_BUTTON)) break;
-
-        // バランス走行用角度に制御
-        tail_control(TAIL_ANGLE_DRIVE);
-
-        forward = 0; // 前進命令
-        turn = 100;
-
-        // 倒立振子制御APIに渡すパラメータを取得する
-        motor_ang_l = leftMotor->getCount();
-        motor_ang_r = rightMotor->getCount();
-        gyro = gyroSensor->getAnglerVelocity();
-        volt = ev3_battery_voltage_mV();
-
-        // 倒立振子制御APIを呼び出し、倒立走行するための左右モータ出力地を得る
-        balance_control(
-            (float)forward,
-            (float)turn,
-            (float)gyro,
-            (float)GYRO_OFFSET,
-            (float)motor_ang_l,
-            (float)motor_ang_r,
-            (float)volt,
-            (int8_t *)&pwm_L,
-            (int8_t *)&pwm_R
-        );
-
-        leftMotor->setPWM(pwm_L);
-        rightMotor->setPWM(pwm_R);
-
-        // 4msec周期起動
-        clock->sleep(4);
-    }
 
     ev3_speaker_play_tone(300, 20);
-    */
 
-    /*
     // しっぽ立てる
     i = 0;
     while (1) {
@@ -1197,9 +1125,7 @@ static void figure_strategy2(void)
         tail_control(79);
         clock->sleep(4);
     }
-    */
 
-    /*
     // ライン復帰
     i = 0;
     while (1) {
@@ -1230,13 +1156,16 @@ static void figure_strategy2(void)
         tail_control(90);
         clock->sleep(4);
     }
-    */
+
+    limited_line_trace(20, 10000);
 
     while (1) {
+
         ev3_motor_set_power(EV3_PORT_B, 0);
         ev3_motor_set_power(EV3_PORT_C, 0);
-        tail_control(TAIL_ANGLE_DRIVE);
+        tail_control(79);
         clock->sleep(4);
+
     }
 
     return;
@@ -1246,7 +1175,7 @@ static void figure_strategy2(void)
 // 関数名 : limited_line_trace
 // 引数 :
 // 返り値 :
-// 概要 : 一定期間ライントレースを行う
+// 概要 :
 //*****************************************************************************
 
 static void limited_line_trace(int8_t forward, int16_t time)
@@ -1265,6 +1194,8 @@ static void limited_line_trace(int8_t forward, int16_t time)
         if (ev3_button_is_pressed(BACK_BUTTON)) break;
 
         tail_control(TAIL_ANGLE_DRIVE); // バランス走行用角度に制御
+
+        forward = 30; // 前進命令
 
         // PiD control
         diff[0] = diff[1];
@@ -1310,29 +1241,32 @@ static void limited_line_trace(int8_t forward, int16_t time)
 }
 
 //*****************************************************************************
-// 関数名 : balance_run
+// 関数名 : straight_limited_line_trace
 // 引数 :
 // 返り値 :
-// 概要 : ターン値を0にしたライントレース。
+// 概要 :
 //*****************************************************************************
 
-static void balance_run(int8_t forward, int8_t turn, int16_t num)
+static void straight_limited_line_trace(int8_t forward, int16_t time)
 {
+    int8_t turn;         // 旋回命令
     int8_t pwm_L, pwm_R; // 左右モータPWM出力
-    int32_t motor_angle; // 回転角の一時保管用係数
 
-    // 現在のエンコーダ値を記録
-    motor_angle = leftMotor->getCount();
 
-    while (1) {
+    int16_t count; // 反復変数
+
+    for(count = 0; count < time; count++)
+    {
         int32_t motor_ang_l, motor_ang_r;
         int32_t gyro, volt;
 
-        // エンコーダ値が一定以上増加したら反復終了
-        if ( leftMotor->getCount() - motor_angle > num ) { break; }
+        if (ev3_button_is_pressed(BACK_BUTTON)) break;
 
         // バランス走行用角度に制御
         tail_control(TAIL_ANGLE_DRIVE);
+
+        forward = 30; // 前進命令
+        turn = 0;
 
         // 倒立振子制御APIに渡すパラメータを取得する
         motor_ang_l = leftMotor->getCount();
@@ -1363,10 +1297,10 @@ static void balance_run(int8_t forward, int8_t turn, int16_t num)
 }
 
 //*****************************************************************************
-// 関数名 : tail_limited_line_trace
+// 関数名 : tail_imited_line_trace
 // 引数 :
 // 返り値 :
-// 概要 : 指定した時間で尻尾を任意の位置にしながらライントレースを行う。
+// 概要 :
 //*****************************************************************************
 
 static void tail_limited_line_trace(int8_t forward, int16_t c_angle, int16_t angle, int16_t num)

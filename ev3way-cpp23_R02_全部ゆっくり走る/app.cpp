@@ -1,4 +1,4 @@
-/**
+﻿/**
  ******************************************************************************
  ** ファイル名 : app.cpp
  **
@@ -265,18 +265,17 @@ void main_task(intptr_t unused)
         // 区間切り分け ( 前進命令をコメントして使う、LコースRコースでそれぞれ使用しない方はコメント )
         // 直線 : 緑、カーブ : 赤、難所 : 橙
 
-        /*
         forward = 30;
         kp = 0.91;
         ki = 0.3;
         kd = 0.075;
         flag_figure = 0;
         ev3_led_set_color(LED_ORANGE);
-        */
 
+        /*
         // S1
         if ( motor_ang_r < S1 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -294,7 +293,7 @@ void main_task(intptr_t unused)
 
         // S2
         else if ( motor_ang_r < S1+C1+S2 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -312,7 +311,7 @@ void main_task(intptr_t unused)
         }
         // S3
         else if ( motor_ang_r < S1+C1+S2+C2C3+S3 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -328,6 +327,7 @@ void main_task(intptr_t unused)
             ev3_led_set_color(LED_ORANGE);
             flag_figure = 0;
         }
+        */
 
         // PID制御
         diff[0] = diff[1];

@@ -66,11 +66,11 @@ static FILE     *bt = NULL;       // Bluetoothファイルハンドル
 #define CALIB_FONT_HEIGHT (8)
 
 // 区間の境界の位置
-#define S1 6312
-#define C1 1306
-#define S2 1171
-#define C2C3 1807
-#define S3 1396
+#define S1 5913
+#define C1 1811
+#define S2 937
+#define C2C3 2486
+#define S3 912
 
 // 関数プロトタイプ宣言
 static int32_t sonar_alert(void); // ソナーセンサで障害物を検知する
@@ -279,47 +279,47 @@ void main_task(intptr_t unused)
             ki = 1.2;
             kd = 0.027;
             ev3_led_set_color(LED_GREEN);
-            flag_lookup = 2;
+            flag_figure = 2;
         }
         // C1
         else if ( motor_ang_r < S1+C1 ) {
             forward = 50;
             kp = 0.91;
-            ki = 0.3;
+            ki = 0.1;
             kd = 0.075;
             ev3_led_set_color(LED_RED);
         }
 
         // S2
         else if ( motor_ang_r < S1+C1+S2 ) {
-          forward = 100;
-          kp = 0.36;
-          ki = 1.2;
-          kd = 0.027;
-          ev3_led_set_color(LED_GREEN);
-          flag_lookup = 0;
+            forward = 100;
+            kp = 0.36;
+            ki = 1.2;
+            kd = 0.027;
+            ev3_led_set_color(LED_GREEN);
+            flag_figure = 0;
         }
         // C2 C3
         else if ( motor_ang_r < S1+C1+S2+C2C3 ) {
-          forward = 50;
-          kp = 0.91;
-          ki = 0.3;
-          kd = 0.075;
-          ev3_led_set_color(LED_RED);
+            forward = 50;
+            kp = 0.91;
+            ki = 0.1;
+            kd = 0.075;
+            ev3_led_set_color(LED_RED);
         }
         // S3
         else if ( motor_ang_r < S1+C1+S2+C2C3+S3 ) {
-          forward = 100;
-          kp = 0.36;
-          ki = 1.2;
-          kd = 0.027;
-          ev3_led_set_color(LED_GREEN);
+            forward = 100;
+            kp = 0.36;
+            ki = 1.2;
+            kd = 0.027;
+            ev3_led_set_color(LED_GREEN);
         }
         // 難所周辺
         else {
             forward = 30;
             kp = 0.91;
-            ki = 0.3;
+            ki = 0.1;
             kd = 0.075;
             ev3_led_set_color(LED_ORANGE);
         }
