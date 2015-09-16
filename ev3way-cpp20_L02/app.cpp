@@ -66,17 +66,11 @@ static FILE     *bt = NULL;       // Bluetoothファイルハンドル
 #define CALIB_FONT_HEIGHT (8)
 
 // 区間の境界の位置
-#define POINT1 6312   // L S1-C1
-#define POINT2 7618   // L C1-S2
-#define POINT3 8789   // L S2-C2C3
-#define POINT4 10596  // L C2C3-S3
-#define POINT5 11992  // l S3-難所
-
-#define POINT6 6312   // R
-#define POINT7 7618   // R
-#define POINT8 8789   // R
-#define POINT9 10596  // R
-#define POINT10 11992  // R
+#define S1 6312
+#define C1 1306
+#define S2 1171
+#define C2C3 1807
+#define S3 1396
 
 // 関数プロトタイプ宣言
 static int32_t sonar_alert(void); // ソナーセンサで障害物を検知する
@@ -248,6 +242,7 @@ void main_task(intptr_t unused)
         }
         */
 
+
         // ルックアップゲート検知による攻略動作
         // ルックアップフラグが0のとき、かつソナーセンサが反応したとき
         if (sonar_alert() == 1 && flag_lookup == 0)
@@ -277,19 +272,17 @@ void main_task(intptr_t unused)
         kd = 0.075;
         ev3_led_set_color(LED_ORANGE);
 
-        // R
-
         // S1
-        /*
-        if ( motor_ang_r < POINT1 ) {
+        if ( motor_ang_r < S1 ) {
             forward = 100;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
             ev3_led_set_color(LED_GREEN);
+            flag_lookup = 2;
         }
         // C1
-        else if ( motor_ang_r < POINT2 ) {
+        else if ( motor_ang_r < S1+C1 ) {
             forward = 50;
             kp = 0.91;
             ki = 0.3;
@@ -298,15 +291,16 @@ void main_task(intptr_t unused)
         }
 
         // S2
-        else if ( motor_ang_r < POINT3 ) {
+        else if ( motor_ang_r < S1+C1+S2 ) {
           forward = 100;
           kp = 0.36;
           ki = 1.2;
           kd = 0.027;
           ev3_led_set_color(LED_GREEN);
+          flag_lookup = 0;
         }
         // C2 C3
-        else if ( motor_ang_r < POINT4 ) {
+        else if ( motor_ang_r < S1+C1+S2+C2C3 ) {
           forward = 50;
           kp = 0.91;
           ki = 0.3;
@@ -314,7 +308,7 @@ void main_task(intptr_t unused)
           ev3_led_set_color(LED_RED);
         }
         // S3
-        else if ( motor_ang_r < POINT5 ) {
+        else if ( motor_ang_r < S1+C1+S2+C2C3+S3 ) {
           forward = 100;
           kp = 0.36;
           ki = 1.2;
@@ -329,46 +323,6 @@ void main_task(intptr_t unused)
             kd = 0.075;
             ev3_led_set_color(LED_ORANGE);
         }
-        */
-
-        /*
-
-        // L
-
-        // S1
-        if ( motor_ang_r < 100 ) {
-            forward = 100;
-            ev3_led_set_color(LED_GREEN);
-        }
-        // C1
-        else if ( motor_ang_r < 200 ) {
-            forward = 30;
-            ev3_led_set_color(LED_RED);
-        }
-        // S2
-        else if ( motor_ang_r < 300 ) {
-            forward = 100;
-            ev3_led_set_color(LED_GREEN);
-        }
-        // C2 C3
-        else if ( motor_ang_r < 300 ) {
-            forward = 30;
-            ev3_led_set_color(LED_RED);
-        }
-        // S3
-        else if ( motor_ang_r < 300 ) {
-            forward = 100;
-            ev3_led_set_color(LED_GREEN);
-        }
-        // 難所周辺
-        else {
-            forward = 30;
-            ev3_led_set_color(LED_ORANGE);
-        }
-        */
-
-
-        //ev3_speaker_play_tone(300, 10);
 
         // PID制御
         diff[0] = diff[1];

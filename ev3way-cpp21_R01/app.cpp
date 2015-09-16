@@ -228,7 +228,6 @@ void main_task(intptr_t unused)
         // バランス走行用角度に制御
         tail_control(TAIL_ANGLE_DRIVE);
 
-        /*
         // フィギュアL検知による攻略動作
         // フィギュアLフラグが0のとき
         if ( flag_figure == 0 ) {
@@ -240,9 +239,8 @@ void main_task(intptr_t unused)
                 //ev3_speaker_play_tone(600, 50);
             }
         }
-        */
 
-
+        /*
         // ルックアップゲート検知による攻略動作
         // ルックアップフラグが0のとき、かつソナーセンサが反応したとき
         if (sonar_alert() == 1 && flag_lookup == 0)
@@ -255,6 +253,7 @@ void main_task(intptr_t unused)
             flag_lookup = 2;
             lookup_strategy();
         }
+        */
 
         // 前進命令
         // forward = 100;
