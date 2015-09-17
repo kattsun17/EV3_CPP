@@ -6,13 +6,13 @@
 KERNELDIR = ../..
 TARGETDIR = $(KERNELDIR)/target/ev3_gcc
 LOADERDIR = $(KERNELDIR)/target/ev3_gcc/dmloader
-SRCDIRS = ../ev3way-cpp20_L02 $(KERNELDIR)/target/ev3_gcc/api/src $(KERNELDIR)/target/ev3_gcc/TLSF-2.4.6/src
+SRCDIRS = ../ev3way-cpp23_R02_全部ゆっくり走る $(KERNELDIR)/target/ev3_gcc/api/src $(KERNELDIR)/target/ev3_gcc/TLSF-2.4.6/src
 
 # Compiler options
 COPTS += -DBUILD_MODULE
 GCC_TARGET = arm-none-eabi
-INCLUDES += -I../ev3way-cpp20_L02 \
-			-I../ev3way-cpp20_L02/../common \
+INCLUDES += -I../ev3way-cpp23_R02_全部ゆっくり走る \
+			-I../ev3way-cpp23_R02_全部ゆっくり走る/../common \
 			-I$(LOADERDIR)/app \
 			-I$(KERNELDIR)/target/ev3_gcc \
 		   	-I$(KERNELDIR)/target/ev3_gcc/api/include \
@@ -32,7 +32,7 @@ all: $(OBJFILE)
 
 MODOBJS += t_perror.o strerror.o vasyslog.o tlsf.o
 
-MODCFG = ../ev3way-cpp20_L02/app.cfg
+MODCFG = ../ev3way-cpp23_R02_全部ゆっくり走る/app.cfg
 
 MODDIR = $(PWD)
 
@@ -44,7 +44,7 @@ OMIT_DEBUG_INFO = 1
 BUILD_LOADABLE_MODULE = 1
 CONFIG_EV3RT_APPLICATION = 1
 WORKSPACE_LIB_DIR := ../common/lib
-include ../ev3way-cpp20_L02/Makefile.inc
+include ../ev3way-cpp23_R02_全部ゆっくり走る/Makefile.inc
 ifeq ($(SRCLANG),c++)
   USE_CXX = true
   APPL_CXXOBJS += app.o 

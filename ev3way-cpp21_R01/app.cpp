@@ -1052,12 +1052,17 @@ static void figure_strategy2(void)
     int32_t motor_angle;
 
     ev3_speaker_play_tone(300, 20);
+
+    // のぼらせる
     balance_run(30, 0, 700);
 
     ev3_speaker_play_tone(300, 20);
+    // おりる
     balance_run(10, 0, 500);
 
     ev3_speaker_play_tone(300, 20);
+
+    // ライン復帰用に曲がる
     balance_run(10, -2, 70);
 
     ev3_speaker_play_tone(300, 20);

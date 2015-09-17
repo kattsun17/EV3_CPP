@@ -480,6 +480,8 @@ void lookup_strategy(void)
     int32_t motor_ang_l, motor_ang_r;
     int8_t pwm_L, pwm_R;
 
+    ev3_led_set_color(LED_GREEN);
+
     //int32_t oldang_l, oldang_r;
 
     // しっぽを出してわずかに後退
@@ -769,6 +771,7 @@ static void garage_stop(void)
         motor_ang_r = rightMotor->getCount();
         gyro = gyroSensor->getAnglerVelocity();
         volt = ev3_battery_voltage_mV();
+
 
         balance_control(
             (float)forward,
@@ -1366,7 +1369,10 @@ static void tail_limited_line_trace(int8_t forward, int16_t c_angle, int16_t ang
 
 //*****************************************************************************
 // 関数名 : moving_style_change
-// 引数 : angle(モータ目標角度[度]), time(4msecでの処理繰り返し回数), motor(pwm?)
+// 引数 : current_angle(尻尾モータの開始角度[度])，(モータ目標角度[度]),
+//        time(4msecでの処理繰り返し回数、),
+//        motor(両輪に与えるモータのパワー {current_angle > angle : 負、
+//                                       angle > current_angle : 正})
 // 返り値 : なし
 // 概要 : 動きながら指定の角度に指定の時間で移行する
 //*****************************************************************************
