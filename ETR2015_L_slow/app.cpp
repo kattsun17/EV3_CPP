@@ -1,4 +1,4 @@
-/**
+﻿/**
  ******************************************************************************
  ** ファイル名 : app.cpp
  **
@@ -139,7 +139,7 @@ void main_task(intptr_t unused)
 
     // LCD画面表示 "コード名"
     ev3_lcd_fill_rect(0, 0, EV3_LCD_WIDTH, EV3_LCD_HEIGHT, EV3_LCD_WHITE);
-    ev3_lcd_draw_string("L normal", 0, CALIB_FONT_HEIGHT*1);
+    ev3_lcd_draw_string("L slow", 0, CALIB_FONT_HEIGHT*1);
 
 
     // LCD画面表示 "電圧"
@@ -186,7 +186,6 @@ void main_task(intptr_t unused)
         // しっぽ手動調整
         if (ev3_button_is_pressed(UP_BUTTON)) { tail_butt++; ev3_speaker_play_tone(300, 20); clock->sleep(300); }
         if (ev3_button_is_pressed(DOWN_BUTTON)) { tail_butt--; ev3_speaker_play_tone(600, 20); clock->sleep(300); }
-
 
 
         if (bt_cmd == 1)
@@ -274,26 +273,34 @@ void main_task(intptr_t unused)
         // 区間切り分け ( 前進命令をコメントして使う、LコースRコースでそれぞれ使用しない方はコメント )
         // 直線 : 緑、カーブ : 赤、難所 : 橙
 
-        /*
-        forward = 30;
-        kp = 0.91;
-        ki = 0.3;
-        kd = 0.075;
-        ev3_led_set_color(LED_ORANGE);
-        */
+        if ( motor_ang_r < 8300 ) {
+            forward = 70;
+            kp = 0.91;
+            ki = 0.3;
+            kd = 0.075;
+            ev3_led_set_color(LED_GREEN);
+        } else {
+            forward = 30;
+            kp = 0.91;
+            ki = 0.3;
+            kd = 0.075;
+            ev3_led_set_color(LED_ORANGE);
+        }
 
+
+        /*
         // S1
         if ( motor_ang_r < S1 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
             ev3_led_set_color(LED_GREEN);
-            //flag_figure = 2;
+            flag_figure = 2;
         }
         // C1
         else if ( motor_ang_r < S1+C1 ) {
-            forward = 70;
+            forward = 50;
             kp = 0.91;
             ki = 0.1;
             kd = 0.075;
@@ -302,16 +309,16 @@ void main_task(intptr_t unused)
 
         // S2
         else if ( motor_ang_r < S1+C1+S2 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
             ev3_led_set_color(LED_GREEN);
-            //flag_figure = 0;
+            flag_figure = 0;
         }
         // C2 C3
         else if ( motor_ang_r < S1+C1+S2+C2C3 ) {
-            forward = 70;
+            forward = 50;
             kp = 0.91;
             ki = 0.1;
             kd = 0.075;
@@ -319,7 +326,7 @@ void main_task(intptr_t unused)
         }
         // S3
         else if ( motor_ang_r < S1+C1+S2+C2C3+S3 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -333,6 +340,7 @@ void main_task(intptr_t unused)
             kd = 0.075;
             ev3_led_set_color(LED_ORANGE);
         }
+        */
 
         // PID制御
         diff[0] = diff[1];
@@ -487,8 +495,6 @@ void lookup_strategy(void)
     int32_t volt;
     int32_t motor_ang_l, motor_ang_r;
     int8_t pwm_L, pwm_R;
-
-    ev3_led_set_color(LED_GREEN);
 
     //int32_t oldang_l, oldang_r;
 
@@ -779,7 +785,6 @@ static void garage_stop(void)
         motor_ang_r = rightMotor->getCount();
         gyro = gyroSensor->getAnglerVelocity();
         volt = ev3_battery_voltage_mV();
-
 
         balance_control(
             (float)forward,
@@ -1377,10 +1382,7 @@ static void tail_limited_line_trace(int8_t forward, int16_t c_angle, int16_t ang
 
 //*****************************************************************************
 // 関数名 : moving_style_change
-// 引数 : current_angle(尻尾モータの開始角度[度])，(モータ目標角度[度]),
-//        time(4msecでの処理繰り返し回数、),
-//        motor(両輪に与えるモータのパワー {current_angle > angle : 負、
-//                                       angle > current_angle : 正})
+// 引数 : angle(モータ目標角度[度]), time(4msecでの処理繰り返し回数), motor(pwm?)
 // 返り値 : なし
 // 概要 : 動きながら指定の角度に指定の時間で移行する
 //*****************************************************************************

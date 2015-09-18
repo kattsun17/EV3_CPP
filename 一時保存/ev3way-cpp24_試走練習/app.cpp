@@ -1,4 +1,4 @@
-/**
+﻿/**
  ******************************************************************************
  ** ファイル名 : app.cpp
  **
@@ -66,7 +66,7 @@ static FILE     *bt = NULL;       // Bluetoothファイルハンドル
 #define CALIB_FONT_HEIGHT (8)
 
 // 区間の境界の位置
-#define S1 5102
+#define S1 2500
 #define C1 1768
 #define S2 825
 #define C2C3 2403
@@ -176,10 +176,19 @@ void main_task(intptr_t unused)
     // 初期化完了通知
     ev3_led_set_color(LED_ORANGE);
 
+    int tail_butt = 0;
+
     // スタート待機
     while(1)
     {
-        tail_control(TAIL_ANGLE_STAND_UP); // 完全停止用角度に制御
+
+        // しっぽ手動調整
+        if (ev3_button_is_pressed(UP_BUTTON)) { tail_butt++; ev3_speaker_play_tone(300, 20); clock->sleep(300); }
+        if (ev3_button_is_pressed(DOWN_BUTTON)) { tail_butt--; ev3_speaker_play_tone(600, 20); clock->sleep(300); }
+
+
+
+        tail_control(TAIL_ANGLE_STAND_UP + tail_butt); // 完全停止用角度に制御
 
         if (bt_cmd == 1)
         {
@@ -264,7 +273,6 @@ void main_task(intptr_t unused)
 
         // 区間切り分け ( 前進命令をコメントして使う、LコースRコースでそれぞれ使用しない方はコメント )
         // 直線 : 緑、カーブ : 赤、難所 : 橙
-
         /*
         forward = 30;
         kp = 0.91;
@@ -274,9 +282,10 @@ void main_task(intptr_t unused)
         ev3_led_set_color(LED_ORANGE);
         */
 
+
         // S1
         if ( motor_ang_r < S1 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -294,7 +303,7 @@ void main_task(intptr_t unused)
 
         // S2
         else if ( motor_ang_r < S1+C1+S2 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -312,7 +321,7 @@ void main_task(intptr_t unused)
         }
         // S3
         else if ( motor_ang_r < S1+C1+S2+C2C3+S3 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -328,6 +337,7 @@ void main_task(intptr_t unused)
             ev3_led_set_color(LED_ORANGE);
             flag_figure = 0;
         }
+
 
         // PID制御
         diff[0] = diff[1];
@@ -1052,17 +1062,12 @@ static void figure_strategy2(void)
     int32_t motor_angle;
 
     ev3_speaker_play_tone(300, 20);
-
-    // のぼらせる
     balance_run(30, 0, 700);
 
     ev3_speaker_play_tone(300, 20);
-    // おりる
     balance_run(10, 0, 500);
 
     ev3_speaker_play_tone(300, 20);
-
-    // ライン復帰用に曲がる
     balance_run(10, -2, 70);
 
     ev3_speaker_play_tone(300, 20);

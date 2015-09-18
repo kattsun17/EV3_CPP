@@ -119,7 +119,7 @@ void main_task(intptr_t unused)
     int8_t turn;         // 旋回命令
     int8_t pwm_L, pwm_R; // 左右モータPWM出力
     int8_t flag_lookup = 0;  // ルックアップゲート用関数のフラグ
-    int8_t flag_figure = 2;  // フィギュアL用関数のフラグ
+    int8_t flag_figure = 3;  // フィギュアL用関数のフラグ
     int32_t figure_count = 0;
     //int8_t flag_garage = 0;  // ガレージ用関数のフラグ
     int8_t p, i, d;
@@ -139,7 +139,7 @@ void main_task(intptr_t unused)
 
     // LCD画面表示 "コード名"
     ev3_lcd_fill_rect(0, 0, EV3_LCD_WIDTH, EV3_LCD_HEIGHT, EV3_LCD_WHITE);
-    ev3_lcd_draw_string("EV3way-ET sample_cpp", 0, CALIB_FONT_HEIGHT*1);
+    ev3_lcd_draw_string("R slow", 0, CALIB_FONT_HEIGHT*1);
 
 
     // LCD画面表示 "電圧"
@@ -176,10 +176,17 @@ void main_task(intptr_t unused)
     // 初期化完了通知
     ev3_led_set_color(LED_ORANGE);
 
+    int tail_butt = 0;
+
     // スタート待機
     while(1)
     {
         tail_control(TAIL_ANGLE_STAND_UP); // 完全停止用角度に制御
+
+        // しっぽ手動調整
+        if (ev3_button_is_pressed(UP_BUTTON)) { tail_butt++; ev3_speaker_play_tone(300, 20); clock->sleep(300); }
+        if (ev3_button_is_pressed(DOWN_BUTTON)) { tail_butt--; ev3_speaker_play_tone(600, 20); clock->sleep(300); }
+
 
         if (bt_cmd == 1)
         {
@@ -258,6 +265,8 @@ void main_task(intptr_t unused)
         // 前進命令
         // forward = 100;
 
+        if ( motor_ang_r > 1000 ) { flag_figure = 0; }
+
 
 
 
@@ -265,12 +274,19 @@ void main_task(intptr_t unused)
         // 区間切り分け ( 前進命令をコメントして使う、LコースRコースでそれぞれ使用しない方はコメント )
         // 直線 : 緑、カーブ : 赤、難所 : 橙
 
-        forward = 30;
-        kp = 0.91;
-        ki = 0.3;
-        kd = 0.075;
-        flag_figure = 0;
-        ev3_led_set_color(LED_ORANGE);
+        if ( motor_ang_r < 11000 ) {
+            forward = 70;
+            kp = 0.91;
+            ki = 0.3;
+            kd = 0.075;
+            ev3_led_set_color(LED_GREEN);
+        } else {
+            forward = 30;
+            kp = 0.91;
+            ki = 0.3;
+            kd = 0.075;
+            ev3_led_set_color(LED_ORANGE);
+        }
 
         /*
         // S1
