@@ -181,7 +181,7 @@ void main_task(intptr_t unused)
     // スタート待機
     while(1)
     {
-        tail_control(TAIL_ANGLE_STAND_UP); // 完全停止用角度に制御
+        tail_control(TAIL_ANGLE_STAND_UP + tail_butt); // 完全停止用角度に制御
 
         // しっぽ手動調整
         if (ev3_button_is_pressed(UP_BUTTON)) { tail_butt++; ev3_speaker_play_tone(300, 20); clock->sleep(300); }

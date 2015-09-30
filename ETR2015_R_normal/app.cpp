@@ -67,7 +67,7 @@ static FILE     *bt = NULL;       // Bluetoothファイルハンドル
 
 // 区間の境界の位置
 #define S1 5102
-#define C1 1768
+#define C1 2000
 #define S2 825
 #define C2C3 2403
 #define S3 934
@@ -181,7 +181,7 @@ void main_task(intptr_t unused)
     // スタート待機
     while(1)
     {
-        tail_control(TAIL_ANGLE_STAND_UP); // 完全停止用角度に制御
+        tail_control(TAIL_ANGLE_STAND_UP + tail_butt); // 完全停止用角度に制御
 
         // しっぽ手動調整
         if (ev3_button_is_pressed(UP_BUTTON)) { tail_butt++; ev3_speaker_play_tone(300, 20); clock->sleep(300); }
@@ -311,7 +311,7 @@ void main_task(intptr_t unused)
         }
         // C2 C3
         else if ( motor_ang_r < S1+C1+S2+C2C3 ) {
-            forward = 70;
+            forward = 50;
             kp = 0.91;
             ki = 0.1;
             kd = 0.075;
@@ -320,7 +320,7 @@ void main_task(intptr_t unused)
         }
         // S3
         else if ( motor_ang_r < S1+C1+S2+C2C3+S3 ) {
-            forward = 100;
+            forward = 50;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;

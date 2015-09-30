@@ -181,7 +181,7 @@ void main_task(intptr_t unused)
     // スタート待機
     while(1)
     {
-        tail_control(TAIL_ANGLE_STAND_UP); // 完全停止用角度に制御
+        tail_control(TAIL_ANGLE_STAND_UP + tail_butt); // 完全停止用角度に制御
 
         // しっぽ手動調整
         if (ev3_button_is_pressed(UP_BUTTON)) { tail_butt++; ev3_speaker_play_tone(300, 20); clock->sleep(300); }
@@ -293,7 +293,7 @@ void main_task(intptr_t unused)
         }
         // C1
         else if ( motor_ang_r < S1+C1 ) {
-            forward = 70;
+            forward = 50;
             kp = 0.91;
             ki = 0.1;
             kd = 0.075;
@@ -319,7 +319,7 @@ void main_task(intptr_t unused)
         }
         // S3
         else if ( motor_ang_r < S1+C1+S2+C2C3+S3 ) {
-            forward = 100;
+            forward = 70;
             kp = 0.36;
             ki = 1.2;
             kd = 0.027;
@@ -456,6 +456,7 @@ void bt_task(intptr_t unused)
     while(1)
     {
         // 受信
+        
         uint8_t c = fgetc(bt);
         switch(c)
         {
@@ -750,16 +751,16 @@ static void garage_stop(void)
 
         if (colorSensor->getBrightness() >= ((light_white + light_black)/2)-10)
         {
-            ev3_motor_set_power(EV3_PORT_B, 7);
-            ev3_motor_set_power(EV3_PORT_C, 10);
+            ev3_motor_set_power(EV3_PORT_B, 10);
+            ev3_motor_set_power(EV3_PORT_C, 7);
         }
         else
         {
-            ev3_motor_set_power(EV3_PORT_B, 10);
-            ev3_motor_set_power(EV3_PORT_C, 0);
+            ev3_motor_set_power(EV3_PORT_B, 0);
+            ev3_motor_set_power(EV3_PORT_C, 10);
         }
 
-        if ( j > 900 && j % 500 == 0 ) {
+        if ( j > 900 && j % 400 == 0 ) {
             for ( i = 0; i < 1000; i++ ) {
                 ev3_motor_set_power(EV3_PORT_B, 0);
                 ev3_motor_set_power(EV3_PORT_C, 0);
